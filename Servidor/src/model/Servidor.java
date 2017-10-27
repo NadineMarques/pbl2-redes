@@ -36,8 +36,8 @@ public class Servidor {
             cliente = servidor.accept(); //aceita novos clientes
             this.ps = new PrintStream(cliente.getOutputStream()); //atribue o canal de saída do cliente para que o servidor possa enviar mensagens a ele
             System.out.println("Cliente: " + cliente.getInetAddress().getHostAddress() + " se conectou");
-            ClienteServidor temp = new ClienteServidor(cliente, this, ps); //cria thread para o cliente genérico clienteservidor
-            new Thread(temp).start(); //inicia a thread de cliente genérico
+//            ClienteServidor temp = new ClienteServidor(cliente, this, ps); //cria thread para o cliente genérico clienteservidor
+//            new Thread(temp).start(); //inicia a thread de cliente genérico
         }
     }
 

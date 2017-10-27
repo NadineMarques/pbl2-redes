@@ -12,7 +12,7 @@ import java.util.*;
 
 public class ServidorNuvem {
 
-    private final ArrayList<ServidorBorda> servidoresBorda; //lista de sensores online
+    private final ArrayList<BordaServidor> servidoresBorda; //lista de sensores online
     private final ArrayList<MedicoServidor> medicos; //lista de sensores online
     private Socket cliente; //socket para comunicação com clientes
     private ServerSocket servidor; //serverSocket para comunicação com clientes
@@ -20,6 +20,7 @@ public class ServidorNuvem {
 
     public ServidorNuvem() {
         servidoresBorda = new ArrayList<>(); //inicialização da lista de sensores
+        medicos = new ArrayList<>();
         //verificar arquivo com lista de servidores de borda
     }
 
