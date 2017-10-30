@@ -1,5 +1,4 @@
 package model;
-
 /**Classe para objetos do tipo SensorServidor contendo atributos e métodos para os mesmos.
  * @author Nadine Cerqueira Marques
  */

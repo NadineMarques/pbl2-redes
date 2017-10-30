@@ -15,13 +15,11 @@ public class ClienteServidorUDP implements Runnable {
     private int id, batimentosCard, pressaoSangue;
     private PrintStream ps;
     private final Socket cliente;
-    private final Servidor servidor;
     private final DatagramSocket servidorDatagram;
     private int porta, numConn = 1;
 
-    public ClienteServidorUDP(Socket cliente, Servidor servidor, DatagramSocket servidorDatagram) throws IOException {
+    public ClienteServidorUDP(Socket cliente, DatagramSocket servidorDatagram) throws IOException {
         this.cliente = cliente;
-        this.servidor = servidor;
         this.ps = new PrintStream(cliente.getOutputStream());
         this.servidorDatagram = new DatagramSocket(cliente.getPort());
         this.ps = new PrintStream(cliente.getOutputStream());

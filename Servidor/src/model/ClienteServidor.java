@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 
 public class ClienteServidor implements Runnable {
     private final ServidorNuvem servidor;
-    //private final ServidorBorda servidor;
     private final Socket cliente;
     private final PrintStream ps;
     private int id;
@@ -46,6 +45,7 @@ public class ClienteServidor implements Runnable {
         this.servidor = servidor;
         this.ps = ps;
     }
+    
     @Override
     public void run() {
         Scanner entrada;

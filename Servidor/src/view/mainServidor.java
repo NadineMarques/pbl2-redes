@@ -6,7 +6,7 @@
 package view;
 
 import java.io.IOException;
-import model.Servidor;
+import model.ServidorNuvem;
 
 /**
  *
@@ -14,7 +14,7 @@ import model.Servidor;
  */
 public class mainServidor {
     public static void main(String[] args) throws IOException {
-        Servidor s = new Servidor();
+        ServidorNuvem s = new ServidorNuvem();
         s.iniciarServidor();
     }
 }
