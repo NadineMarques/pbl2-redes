@@ -1,4 +1,5 @@
-package controller;
+package model;
+
 /**Classe para objetos do tipo ClienteServidor contendo atributos e métodos para os mesmos.
  * @author Nadine Cerqueira Marques
  */
@@ -10,8 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ClienteServidor implements Runnable {
-    private final ServidorNuvem servidor;
-    //private final ServidorBorda servidor;
+    private final ServidorBordaThread servidorBordaThread;
     private final Socket cliente;
     private final PrintStream ps;
     private int id;
@@ -36,15 +36,16 @@ public class ClienteServidor implements Runnable {
     /**
      * 
      * @param cliente
-     * @param servidor
+     * @param servidorBorda
      * @param ps
      * @throws IOException 
      */
-    public ClienteServidor(Socket cliente, ServidorNuvem servidor, PrintStream ps) throws IOException {
+    public ClienteServidor(Socket cliente, ServidorBordaThread servidorBorda, PrintStream ps) throws IOException {
         this.cliente = cliente;
-        this.servidor = servidor;
         this.ps = ps;
+        this.servidorBordaThread = servidorBorda;
     }
+    
     @Override
     public void run() {
         Scanner entrada;
@@ -53,10 +54,10 @@ public class ClienteServidor implements Runnable {
 
             while (entrada.hasNextLine()) {
                 String mensagem = entrada.nextLine();
-                servidor.tratar(mensagem, this);
+                servidorBordaThread.getServidorBorda().tratar(mensagem, this);
                 System.out.println("Mensagem recebida: " + mensagem);
             }
-            servidor.desconectar(this);
+            servidorBordaThread.getServidorBorda().desconectar(this);
         } catch (IOException e) {
         } catch (InterruptedException ex) {
             Logger.getLogger(ClienteServidor.class.getName()).log(Level.SEVERE, null, ex);
