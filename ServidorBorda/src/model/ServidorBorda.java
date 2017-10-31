@@ -94,6 +94,7 @@ public class ServidorBorda implements Runnable {
             case "#DS": //desconectar sensor
                 id = Integer.parseInt(vetor[1]);
                 desconectarSensor(id);
+                saida.print("#DS " + id);
                 break;
 
             case "#CM": //cadastro de medicos
@@ -138,9 +139,8 @@ public class ServidorBorda implements Runnable {
                 break;
 
             case "#SP": //selecionar paciente a ser monitorado
-                String idPaciente = vetor[2];
-                String aux6[] = vetor[3].split("#");
-                String loginMedico = aux6[1];
+                String idPaciente = vetor[1];
+                String loginMedico = vetor[2];
                 System.out.println("ID PACIENTE:" + idPaciente + "LOGIN:" + loginMedico);
                 for (SensorServidor paciente : sensores) {
                     if (paciente.getClienteSensor().getId() == Integer.parseInt(idPaciente)) {
@@ -236,7 +236,7 @@ public class ServidorBorda implements Runnable {
     public void enviarMaisPropensos(ClienteServidor cliente, char movimento, int batimentosCard, String pressaoSangue) throws InterruptedException {
         
         System.out.println("Enviando pacientes propensos...");
-        while(true) {
+        //while(true) {
             if (batimentosCard < 40 && movimento == 'R') {
                 System.out.println("#PACIENTEPROPENSO " + cliente.getId() + " " + batimentosCard + " " + pressaoSangue + " " + movimento);
                 saida.println("#PACIENTEPROPENSO " + cliente.getId());
@@ -249,8 +249,8 @@ public class ServidorBorda implements Runnable {
             } else {
                 saida.println("#RETIRAR " + cliente.getId());//caso nenhuma das condições seja satisfeita o paciente não está em risco e deve ser retirado da tabela
             }
-        Thread.sleep(5000);
-        }
+        //Thread.sleep(10000);
+        //}
     }
 
     /**
@@ -276,8 +276,10 @@ public class ServidorBorda implements Runnable {
             if (aux == null) {
                 return;
             }
+            saida.print("#DS " + aux.getClienteSensor().getId());
             sensores.remove(aux);//remove o sensor encontrado
             System.out.println("Sensor Desconectou");
+            
             for (MedicoServidor temp : medicos) { //remove o sensor também da lista de médicos
                 temp.getClienteServidor().mandarMsg("#DS " + cliente.getId());
                 temp.getClienteServidor().mandarMsg("#RETIRAR " + cliente.getId());

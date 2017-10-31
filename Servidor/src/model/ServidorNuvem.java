@@ -111,6 +111,13 @@ public class ServidorNuvem {
                     s.getClienteSensor().mandarMsg("#DADOSBORDA " + auxBordaServidor.getClienteBordaServidor().getIp() + " " + auxBordaServidor.getClienteBordaServidor().getPorta());
                 }
                 break;
+                
+            case "#DS":
+                desconectar(buscarSensor(Integer.parseInt(vetor[1])).getClienteSensor());
+                for(MedicoServidor m: medicos){
+                    m.getClienteServidor().mandarMsg("#RETIRAR " + vetor[1]);
+                }
+                break;
 
             case "#CM": // cadastro de medicos
                 MedicoServidor m;
@@ -139,10 +146,12 @@ public class ServidorNuvem {
                     clienteServidor.mandarMsg("#LOGOU"); // medico logou com sucesso
                     m2.setClienteServidor(clienteServidor);
                     m2.setOnline(true);
-                    if(!this.sensores.isEmpty())
+                    if (!this.sensores.isEmpty()) {
                         m2.getClienteServidor().mandarMsg("#S " + sensores.toString());
+                    }
                 }
                 System.out.println("Quantidades de Médicos Conectados: " + (medicos.size()));
+                
 
                 break;
 
@@ -151,25 +160,27 @@ public class ServidorNuvem {
                 this.atualizarDados(clienteServidor, dados);
                 System.out.println("Atualizando Dados...");
                 break;
-                
+
             case "#PACIENTEPROPENSO":
                 String idPropenso = vetor[1];
-                for(MedicoServidor medicos: medicos){
+                for (MedicoServidor medicos : medicos) {
                     medicos.getClienteServidor().mandarMsg("#PACIENTEPROPENSO " + idPropenso);
                 }
                 break;
 
             case "#SP": //selecionar paciente a ser monitorado
-                String idPaciente = vetor[2];
-                String dadosMedico[] = vetor[3].split("#");
+                String dadosMedico[] = vetor[1].split("#");
                 String loginMedico = dadosMedico[1];
+                int idPaciente = Integer.parseInt(dadosMedico[0]);
                 System.out.println("ID PACIENTE:" + idPaciente + "LOGIN:" + loginMedico);
-                for (SensorServidor paciente : sensores) {
-                    if (paciente.getClienteSensor().getId() == Integer.parseInt(idPaciente)) {
-                        for (MedicoServidor medico : medicos) {
-                            if (medico.getLogin().equals(loginMedico)) {
-                                System.out.println("#DADOSPACIENTE " + paciente.getBatimentosCard() + " " + paciente.getPressaoSangue() + " " + paciente.getMovimento());
-                                medico.getClienteServidor().mandarMsg("#DADOSPACIENTE " + paciente.getClienteSensor().getId() + " " + paciente.getBatimentosCard() + " " + paciente.getPressaoSangue() + " " + paciente.getMovimento());
+                for (BordaServidor borda : servidoresBorda) {
+                    for (int i = 0; i < borda.getSensores().size(); i++) {
+                        SensorServidor auxSensor = (SensorServidor) borda.getSensores().get(i);
+                        if(auxSensor.getClienteSensor().getId() == idPaciente) {
+                            for (MedicoServidor medico : medicos) {
+                                if (medico.getLogin().equals(loginMedico)) {
+                                    medico.getClienteServidor().mandarMsg("#DADOSBORDA " + borda.getClienteBordaServidor().getIp() + " " + borda.getClienteBordaServidor().getPorta() + " " + idPaciente);
+                                }
                             }
                         }
                     }
@@ -286,9 +297,9 @@ public class ServidorNuvem {
             for (SensorServidor s : sensores) {
                 if (s.getClienteSensor().getId() == cliente.getId()) {
                     aux = s;
-                    for (BordaServidor servidores : servidoresBorda) {
-                        servidores.getClienteBordaServidor().mandarMsg("#DS " + cliente.getId());
-                    }
+//                    for (BordaServidor servidores : servidoresBorda) {
+//                        servidores.getClienteBordaServidor().mandarMsg("#DS " + cliente.getId());
+//                    }
                 }
             }
             if (aux == null) {
@@ -297,12 +308,13 @@ public class ServidorNuvem {
             sensores.remove(aux);//remove o sensor encontrado
             System.out.println("Sensor Desconectou");
             System.out.println("Quantidades de Sensores Conectados: " + sensores.size());
-            for (MedicoServidor temp : medicos) { //remove o sensor também da lista de médicos
-                temp.getClienteServidor().mandarMsg("#DS " + cliente.getId());
-                temp.getClienteServidor().mandarMsg("#RETIRAR " + cliente.getId());
-            }
+//            for (MedicoServidor temp : medicos) { //remove o sensor também da lista de médicos
+//                temp.getClienteServidor().mandarMsg("#DS " + cliente.getId());
+//                temp.getClienteServidor().mandarMsg("#RETIRAR " + cliente.getId());
+//            }
         }
     }
+
     public void desconectarServidorBorda(ClienteServidor clienteBordaServidor) {
         for (BordaServidor s : servidoresBorda) {
             if (s.getClienteBordaServidor().getIp().equals(clienteBordaServidor.getIp())) {

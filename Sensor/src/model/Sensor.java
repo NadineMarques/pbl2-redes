@@ -23,7 +23,7 @@ public class Sensor implements Runnable {
     private Random pressao;
     private char movimento;
     private final int id;
-    private int porta;
+    private int porta, portaBorda;
     private int batimentosCard;
     private PrintStream mensagem;
     private final Point ponto;
@@ -38,6 +38,7 @@ public class Sensor implements Runnable {
      * @throws IOException
      */
     public Sensor(String ip, int porta) throws IOException {
+       
         this.ip = ip;
         this.porta = porta;
         this.movimento = 'R';
@@ -193,6 +194,7 @@ public class Sensor implements Runnable {
                 mensagem = this.conectar();
                 break;
         }
+        
 
     }
 }

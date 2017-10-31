@@ -1,8 +1,8 @@
 package model;
 
 /**
- * Classe para objetos do tipo Medico contendo atributos e métodos para
- * os mesmos.
+ * Classe para objetos do tipo Medico contendo atributos e métodos para os
+ * mesmos.
  *
  * @author Nadine Cerqueira Marques
  */
@@ -13,22 +13,23 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.DefaultListModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import view.JanelaMedico;
 
 public class Medico implements Runnable {
 
     private final String ip;
-    private final int porta;
+    private int porta, portaBorda;
     private final String login;
     private final String senha;
     private final JanelaMedico jMedico;
     private PrintStream mensagem;
     private Scanner entrada;
     private Point ponto;
+    private String ipBorda;
+    private Socket clientSocket;
+    private String lista = null;
+
     /**
      * Construtor
      *
@@ -46,6 +47,7 @@ public class Medico implements Runnable {
         ponto = new Point(localizaçãoPonto.nextInt(21), localizaçãoPonto.nextInt(21));
         jMedico = new JanelaMedico(this);
     }
+
     /**
      * Conecta médico ao servidor
      *
@@ -54,7 +56,7 @@ public class Medico implements Runnable {
      * @throws IOException
      */
     private PrintStream conectar() throws UnknownHostException, IOException {
-        Socket clientSocket = new Socket(ip, porta);
+        clientSocket = new Socket(ip, porta);
         System.out.println("Médico Conectado ao Servidor " + ip);
         PrintStream saida = new PrintStream(clientSocket.getOutputStream());
         saida.println("#CM " + login + " " + senha + " " + ponto.getX() + " " + ponto.getY());
@@ -78,27 +80,13 @@ public class Medico implements Runnable {
 
     }
 
-    public void tratarMensagemServidor(String mensagem) {
-        String vetor[] = mensagem.split(" ");
+    public void tratarMensagemServidor(String mensagemServidor) throws IOException {
+        String vetor[] = mensagemServidor.split(" ");
         String codigo = vetor[0];
-        DefaultListModel list;
-        System.out.println("Mensagem " + mensagem);
+        
+        System.out.println("Mensagem " + mensagemServidor);
 
         switch (codigo) {
-            case "#CADASTRADO": //médico foi cadastrado
-                System.out.println("Médico Cadastrado");
-                break;
-            case "#NCADASTRADO"://médico não foi cadastrado
-                System.out.println("Médico Já Cadastrado");
-                break;
-
-            case "#LOGOU"://médico logou
-                System.out.println("Médico Online");
-                break;
-            case "#NLOGOU"://médico não logou
-                System.out.println("Médico Offline");
-                break;
-
             case "#PACIENTEPROPENSO": //recebe do servidor dados de paciente propenso
                 String aux[] = vetor[1].split(" ");
                 String dadosPropenso = "Paciente - Id:" + aux[0];
@@ -108,9 +96,7 @@ public class Medico implements Runnable {
 
                 for (int i = 0; i < tabPropensos.getRowCount(); i++) {
                     if (aux[0].equals(tabPropensos.getValueAt(i, 0))) {
-//                        tabPropensos.setValueAt(aux[1], i, 1);
-//                        tabPropensos.setValueAt(aux[2], i, 2);
-//                        tabPropensos.setValueAt(aux[3], i, 3);
+                        tabPropensos.setValueAt(aux[0], i, 0);
                         return;
                     }
                 }
@@ -129,7 +115,14 @@ public class Medico implements Runnable {
                         return;
                     }
                 }
+                break;
 
+            case "#DADOSBORDA":
+                this.ipBorda = vetor[1];
+                this.porta = Integer.parseInt(vetor[2]);
+                clientSocket.close();
+                System.out.println("Ip: " + ipBorda + " " + " Porta: " + porta);
+                mensagem = this.conectar();
                 break;
 
             case "#DADOSPACIENTE": //recebe do servidor dados do paciente selecionado na lista
@@ -166,6 +159,5 @@ public class Medico implements Runnable {
     public void selecionarPaciente(String id) {
         mensagem.println("#SP " + "#" + id + "#" + login);
         System.out.println("PACIENTE SELECIONADO: " + id);
-
     }
 }
