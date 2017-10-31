@@ -238,18 +238,18 @@ public class ServidorBorda implements Runnable {
         System.out.println("Enviando pacientes propensos...");
         while(true) {
             if (batimentosCard < 40 && movimento == 'R') {
-                System.out.println("#PACIENTEPROPENSOS " + cliente.getId() + " " + batimentosCard + " " + pressaoSangue + " " + movimento);
-                saida.println("#PACIENTEPROPENSOS " + cliente.getId());
+                System.out.println("#PACIENTEPROPENSO " + cliente.getId() + " " + batimentosCard + " " + pressaoSangue + " " + movimento);
+                saida.println("#PACIENTEPROPENSO " + cliente.getId());
             } else if (batimentosCard < 40 && movimento == 'M') {
-                System.out.println("#PACIENTEPROPENSOS " + cliente.getId() + " " + batimentosCard + " " + pressaoSangue + " " + movimento);
-                saida.println("#PACIENTEPROPENSOS " + cliente.getId());
+                System.out.println("#PACIENTEPROPENSO " + cliente.getId() + " " + batimentosCard + " " + pressaoSangue + " " + movimento);
+                saida.println("#PACIENTEPROPENSO " + cliente.getId());
             } else if (batimentosCard > 100 && movimento == 'R') {
-                System.out.println("#PACIENTEPROPENSOS " + cliente.getId() + " " + batimentosCard + " " + pressaoSangue + " " + movimento);
-                saida.println("#PACIENTEPROPENSOS " + cliente.getId());
+                System.out.println("#PACIENTEPROPENSO " + cliente.getId() + " " + batimentosCard + " " + pressaoSangue + " " + movimento);
+                saida.println("#PACIENTEPROPENSO " + cliente.getId());
             } else {
                 saida.println("#RETIRAR " + cliente.getId());//caso nenhuma das condições seja satisfeita o paciente não está em risco e deve ser retirado da tabela
             }
-        Thread.sleep(100000);
+        Thread.sleep(5000);
         }
     }
 

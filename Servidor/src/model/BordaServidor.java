@@ -1,5 +1,7 @@
 package model;
 
+import java.util.ArrayList;
+
 /**
  * Classe para objetos do tipo BordaServidor contendo atributos e métodos para
  * os mesmos.
@@ -7,8 +9,19 @@ package model;
  * @author Nadine Cerqueira Marques
  */
 public class BordaServidor {
-    private final ClienteBordaServidor clienteBordaServidor;
+
+    private final ClienteServidor clienteBordaServidor;
     private boolean online = false;
+    private ArrayList<SensorServidor> sensores;
+    
+    public ArrayList getSensores(){
+        return sensores;
+    }
+
+    public void setSensores(ArrayList<SensorServidor> sensores) {
+        this.sensores = sensores;
+    }
+    
     /**
      * Método que informa se o médico atual está online
      *
@@ -32,12 +45,12 @@ public class BordaServidor {
      *
      * @param clienteBordaServidor
      */
-    public BordaServidor(ClienteBordaServidor clienteBordaServidor) {
+    public BordaServidor(ClienteServidor clienteBordaServidor) {
         this.clienteBordaServidor = clienteBordaServidor;
         this.online = true;
     }
 
-    public ClienteBordaServidor getClienteBordaServidor() {
+    public ClienteServidor getClienteBordaServidor() {
         return clienteBordaServidor;
     }
 

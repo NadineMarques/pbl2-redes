@@ -6,8 +6,10 @@ package model;
  *
  * @author Nadine Cerqueira Marques
  */
+import java.awt.Point;
 import java.io.*;
 import java.net.*;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +28,7 @@ public class Medico implements Runnable {
     private final JanelaMedico jMedico;
     private PrintStream mensagem;
     private Scanner entrada;
+    private Point ponto;
     /**
      * Construtor
      *
@@ -39,6 +42,8 @@ public class Medico implements Runnable {
         this.porta = porta;
         this.login = login;
         this.senha = senha;
+        Random localizaçãoPonto = new Random();
+        ponto = new Point(localizaçãoPonto.nextInt(21), localizaçãoPonto.nextInt(21));
         jMedico = new JanelaMedico(this);
     }
     /**
@@ -50,9 +55,9 @@ public class Medico implements Runnable {
      */
     private PrintStream conectar() throws UnknownHostException, IOException {
         Socket clientSocket = new Socket(ip, porta);
-        System.out.println("Médico Conectado");
+        System.out.println("Médico Conectado ao Servidor " + ip);
         PrintStream saida = new PrintStream(clientSocket.getOutputStream());
-        saida.println("#CM " + login + " " + senha);
+        saida.println("#CM " + login + " " + senha + " " + ponto.getX() + " " + ponto.getY());
         entrada = new Scanner(clientSocket.getInputStream());
 
         return saida;
@@ -74,36 +79,12 @@ public class Medico implements Runnable {
     }
 
     public void tratarMensagemServidor(String mensagem) {
-        String vetor[] = mensagem.split(" ", 2);
+        String vetor[] = mensagem.split(" ");
         String codigo = vetor[0];
         DefaultListModel list;
         System.out.println("Mensagem " + mensagem);
 
         switch (codigo) {
-            case "#S": //sensor se conectou ao servidor enquanto o médico está online e precisa ser mostrado na tela
-                String lista = vetor[1];
-                lista = lista.replace('[', ' ');
-                lista = lista.replace(']', ' ');
-                System.out.println("Lista: " + lista);
-                String temp[] = lista.split(",");
-                list = new DefaultListModel();
-
-                jMedico.listaSensores().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent e) {
-                        if (!list.isEmpty()) {
-                            if (!e.getValueIsAdjusting()) {
-                                selecionarPaciente((String) jMedico.listaSensores().getSelectedValue());
-                            }
-                        }
-                    }
-                });
-
-                for (int i = 0; i < temp.length; i++) {
-                    list.addElement(temp[i]);
-                }
-                jMedico.listaSensores().setModel(list);
-                break;
             case "#CADASTRADO": //médico foi cadastrado
                 System.out.println("Médico Cadastrado");
                 break;
@@ -118,53 +99,23 @@ public class Medico implements Runnable {
                 System.out.println("Médico Offline");
                 break;
 
-            case "#CS": //sensor se conectou ao sistema antes de o médico estar online. Então a lista de sensores é percorrida a fim de apresentar suas informações na tela
-                String id = vetor[1];
-                System.out.println(id);
-                System.out.println("Sensor Conectando Id " + id);
-                list = (DefaultListModel) jMedico.listaSensores().getModel();
-                list.addElement(id);
-                break;
-
-            case "#DS": //sensor foi desconectado
-                id = vetor[1];
-                DefaultListModel list2 = (DefaultListModel) jMedico.listaSensores().getModel();
-                for (int i = 0; i < list2.size(); i++) {
-                    if (list2.getElementAt(i).toString().trim().equals(id)) {
-                        System.out.println("Removendo Sensor: " + list2.getElementAt(i));
-                        list2.removeElementAt(i);
-                        jMedico.listaSensores().setModel(list2);
-                    }
-                }
-                DefaultTableModel tabPacientes = (DefaultTableModel) jMedico.getTablePaciente().getModel();
-                for (int i = 0; i < tabPacientes.getRowCount(); i++) {
-                    if (id.equals(tabPacientes.getValueAt(i, 0))) {
-                        tabPacientes.setValueAt("", i, 0);
-                        tabPacientes.setValueAt("", i, 1);
-                        tabPacientes.setValueAt("", i, 2);
-                        tabPacientes.setValueAt("", i, 3);
-                        return;
-                    }
-                }
-                break;
-
-            case "#PACIENTESPROPENSOS": //recebe do servidor dados de paciente propenso
+            case "#PACIENTEPROPENSO": //recebe do servidor dados de paciente propenso
                 String aux[] = vetor[1].split(" ");
-                String dadosPropenso = "Paciente - Id:" + aux[0] + "# Batimentos: " + aux[1] + "  Pressão Sanguínea: " + aux[2] + "  Movimento: " + aux[3];
+                String dadosPropenso = "Paciente - Id:" + aux[0];
                 System.out.println("Paciente Propenso: " + dadosPropenso);
                 DefaultTableModel tabPropensos;
                 tabPropensos = (DefaultTableModel) jMedico.getTablePropensos().getModel();
 
                 for (int i = 0; i < tabPropensos.getRowCount(); i++) {
                     if (aux[0].equals(tabPropensos.getValueAt(i, 0))) {
-                        tabPropensos.setValueAt(aux[1], i, 1);
-                        tabPropensos.setValueAt(aux[2], i, 2);
-                        tabPropensos.setValueAt(aux[3], i, 3);
+//                        tabPropensos.setValueAt(aux[1], i, 1);
+//                        tabPropensos.setValueAt(aux[2], i, 2);
+//                        tabPropensos.setValueAt(aux[3], i, 3);
                         return;
                     }
                 }
                 tabPropensos.addRow(new Object[]{
-                    aux[0], aux[1], aux[2], aux[3]
+                    aux[0]
                 });
                 break;
 

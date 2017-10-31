@@ -6,6 +6,7 @@ package model;
  *
  * @author Nadine Cerqueira Marques
  */
+import java.awt.Point;
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -14,6 +15,7 @@ public class ServidorNuvem {
 
     private ArrayList<BordaServidor> servidoresBorda;
     private ArrayList<SensorServidor> sensores; //lista de sensores online
+    private ArrayList<SensorServidor> pacientesPropensos;
     private ArrayList<MedicoServidor> medicos; //lista de médicos cadastrados
     private Socket cliente; //socket para comunicação com clientes
     private ServerSocket servidor; //serverSocket para comunicação com clientes
@@ -56,17 +58,57 @@ public class ServidorNuvem {
         String codigo = vetor[0];//atribue código do protocolo de comunicação à váriável código
 
         switch (codigo) {
+            case "#CADASTRARBORDA":
+                System.out.println("Cadastrar Servidor de Borda: " + mensagem);
+                String ip = vetor[1];
+                int porta = Integer.parseInt(vetor[2]);
+                BordaServidor bordaServidor = new BordaServidor(clienteServidor);
+                bordaServidor.getClienteBordaServidor().setIp(ip);
+                bordaServidor.getClienteBordaServidor().setPorta(porta);
+                servidoresBorda.add(bordaServidor);
+                System.out.println("Servidor de Borda " + bordaServidor.getClienteBordaServidor().getIp() + " com a porta " + porta + " se conectou.");
+
+                for (SensorServidor s : sensores) {
+                    BordaServidor auxBordaServidor = localizarServidorBordaProximo(s.getClienteSensor().getPonto());
+                    if (auxBordaServidor != null) {
+                        auxBordaServidor.getSensores().add(s);
+                        s.getClienteSensor().mandarMsg("#DADOSBORDA " + auxBordaServidor.getClienteBordaServidor().getIp() + " " + auxBordaServidor.getClienteBordaServidor().getPorta());
+                    }
+                }
+
+                break;
+
+            case "#LOGARBORDA":
+                ip = vetor[1];
+                BordaServidor b = buscarServidorBorda(ip);
+                if (!b.equals(null)) {
+                    b.setOnline(true);
+                }
+                break;
+            case "#DESCONECTARBORDA":
+                ip = vetor[1];
+                b = buscarServidorBorda(ip);
+                if (!b.equals(null)) {
+                    b.getClienteBordaServidor().mandarMsg("#CONECTASENSORESNUVEM");
+                    b.setOnline(false);
+                }
+                break;
+
             case "#S": //cadastro de sensores
-                int id = Integer.parseInt(vetor[1]);
+                String dadosSensor[] = vetor;
+                int id = Integer.parseInt(dadosSensor[1]);
                 SensorServidor s = new SensorServidor(clienteServidor);
-                clienteServidor.setId(id);
+                s.getClienteSensor().setId(id);
+                System.out.println("PONTO: " + dadosSensor[2] + " " + dadosSensor[3]);
+                s.getClienteSensor().setPonto(Double.parseDouble(dadosSensor[2]), Double.parseDouble(dadosSensor[3]));
                 System.out.println("Sensor " + id + " se conectou.");
                 sensores.add(s);
                 System.out.println("Quantidades de Sensores Conectados: " + sensores.size());
 
-                for (MedicoServidor temp : medicos) {
-                    System.out.println("Adicionando Sensores aos Médicos");
-                    temp.getClienteServidor().mandarMsg("#CS " + s.getClienteSensor().getId());
+                BordaServidor auxBordaServidor = localizarServidorBordaProximo(s.getClienteSensor().getPonto());
+                if (auxBordaServidor != null) {
+                    System.out.println("Servido de Borda: " + auxBordaServidor.isOnline());
+                    s.getClienteSensor().mandarMsg("#DADOSBORDA " + auxBordaServidor.getClienteBordaServidor().getIp() + " " + auxBordaServidor.getClienteBordaServidor().getPorta());
                 }
                 break;
 
@@ -78,6 +120,8 @@ public class ServidorNuvem {
                     m = new MedicoServidor(clienteServidor);
                     m.setLogin(aux[1]);
                     m.getClienteServidor().setLogin(aux[1]);
+                    m.setSenha(aux[2]);
+                    m.getClienteServidor().setPonto(Double.parseDouble(aux[3]), Double.parseDouble(aux[4]));
                     m.setSenha(aux[2]);
                     medicos.add(m);
                     clienteServidor.mandarMsg("#CADASTRADO"); //cadastrado com sucesso
@@ -95,7 +139,8 @@ public class ServidorNuvem {
                     clienteServidor.mandarMsg("#LOGOU"); // medico logou com sucesso
                     m2.setClienteServidor(clienteServidor);
                     m2.setOnline(true);
-                    m2.getClienteServidor().mandarMsg("#S " + sensores.toString());
+                    if(!this.sensores.isEmpty())
+                        m2.getClienteServidor().mandarMsg("#S " + sensores.toString());
                 }
                 System.out.println("Quantidades de Médicos Conectados: " + (medicos.size()));
 
@@ -106,11 +151,18 @@ public class ServidorNuvem {
                 this.atualizarDados(clienteServidor, dados);
                 System.out.println("Atualizando Dados...");
                 break;
+                
+            case "#PACIENTEPROPENSO":
+                String idPropenso = vetor[1];
+                for(MedicoServidor medicos: medicos){
+                    medicos.getClienteServidor().mandarMsg("#PACIENTEPROPENSO " + idPropenso);
+                }
+                break;
 
             case "#SP": //selecionar paciente a ser monitorado
                 String idPaciente = vetor[2];
-                String aux6[] = vetor[3].split("#");
-                String loginMedico = aux6[1];
+                String dadosMedico[] = vetor[3].split("#");
+                String loginMedico = dadosMedico[1];
                 System.out.println("ID PACIENTE:" + idPaciente + "LOGIN:" + loginMedico);
                 for (SensorServidor paciente : sensores) {
                     if (paciente.getClienteSensor().getId() == Integer.parseInt(idPaciente)) {
@@ -124,6 +176,23 @@ public class ServidorNuvem {
                 }
                 break;
         }
+    }
+
+    public BordaServidor localizarServidorBordaProximo(Point ponto) {
+        BordaServidor aux = null;
+        Point pontoBorda = null;
+        double distancia = 0, distanciaMenor = 1000000000;
+        for (BordaServidor bs : servidoresBorda) {
+            pontoBorda = bs.getClienteBordaServidor().getPonto();
+            distancia = Math.sqrt(Math.pow((pontoBorda.getX() - ponto.getX()), 2)
+                    + Math.pow((pontoBorda.getY() - ponto.getY()), 2));
+
+            if (distancia < distanciaMenor) {
+                aux = bs;
+                distanciaMenor = distancia;
+            }
+        }
+        return aux;
     }
 
     /**
@@ -181,6 +250,22 @@ public class ServidorNuvem {
     }
 
     /**
+     * Método que procura um servidor de borda
+     *
+     * @param ip
+     * @return
+     */
+    public BordaServidor buscarServidorBorda(String ip) {
+        BordaServidor aux = null;
+        for (BordaServidor s : servidoresBorda) {
+            if (s.getClienteBordaServidor().getIp().equals(ip)) {
+                aux = s;
+            }
+        }
+        return aux;
+    }
+
+    /**
      * Método que desconecta tanto sensores quanto médicos
      *
      * @param cliente
@@ -201,7 +286,7 @@ public class ServidorNuvem {
             for (SensorServidor s : sensores) {
                 if (s.getClienteSensor().getId() == cliente.getId()) {
                     aux = s;
-                    for (BordaServidor servidores: servidoresBorda) {
+                    for (BordaServidor servidores : servidoresBorda) {
                         servidores.getClienteBordaServidor().mandarMsg("#DS " + cliente.getId());
                     }
                 }
@@ -211,14 +296,14 @@ public class ServidorNuvem {
             }
             sensores.remove(aux);//remove o sensor encontrado
             System.out.println("Sensor Desconectou");
+            System.out.println("Quantidades de Sensores Conectados: " + sensores.size());
             for (MedicoServidor temp : medicos) { //remove o sensor também da lista de médicos
                 temp.getClienteServidor().mandarMsg("#DS " + cliente.getId());
                 temp.getClienteServidor().mandarMsg("#RETIRAR " + cliente.getId());
             }
         }
     }
-
-    public void desconectar(ClienteBordaServidor clienteBordaServidor) {
+    public void desconectarServidorBorda(ClienteServidor clienteBordaServidor) {
         for (BordaServidor s : servidoresBorda) {
             if (s.getClienteBordaServidor().getIp().equals(clienteBordaServidor.getIp())) {
                 s.setOnline(false);
@@ -226,4 +311,5 @@ public class ServidorNuvem {
             }
         }
     }
+
 }
