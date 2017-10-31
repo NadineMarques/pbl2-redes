@@ -151,8 +151,12 @@ public class ServidorNuvem {
                     }
                 }
                 System.out.println("Quantidades de Médicos Conectados: " + (medicos.size()));
-                
-
+                break;
+            
+            case "#RETIRAR":
+                for(MedicoServidor mAux : medicos){
+                    mAux.getClienteServidor().mandarMsg("#RETIRAR " + vetor[1]);
+                }
                 break;
 
             case "#DADOS": //recebimento de dados do sensor

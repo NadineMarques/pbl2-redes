@@ -276,7 +276,7 @@ public class ServidorBorda implements Runnable {
             if (aux == null) {
                 return;
             }
-            saida.print("#DS " + aux.getClienteSensor().getId());
+            saida.println("#RETIRAR " + cliente.getId());
             sensores.remove(aux);//remove o sensor encontrado
             System.out.println("Sensor Desconectou");
             

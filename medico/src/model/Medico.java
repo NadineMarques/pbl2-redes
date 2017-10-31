@@ -106,11 +106,11 @@ public class Medico implements Runnable {
                 break;
 
             case "#RETIRAR": //retira paciente da tabela de mais propensos caso seus dados não indiquem mais riscos
-                String aux2[] = vetor[1].split(" ");
-                System.out.println("Dados Paciente Propenso: " + aux2[0]);
+                String id = vetor[1];
+                System.out.println("Dados Paciente a ser retirado: " + id);
                 tabPropensos = (DefaultTableModel) jMedico.getTablePropensos().getModel();
                 for (int i = 0; i < tabPropensos.getRowCount(); i++) {
-                    if (aux2[0].equals(tabPropensos.getValueAt(i, 0))) {
+                    if (id.equals(tabPropensos.getValueAt(i, 0))) {
                         tabPropensos.removeRow(i);
                         return;
                     }
